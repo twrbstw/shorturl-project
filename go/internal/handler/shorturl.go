@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"net/http"
 	"shorturl-service/internal/model"
 	"shorturl-service/internal/service"
 
@@ -19,25 +20,33 @@ func NewShortUrlHandler(s service.IShortUrlService) *ShortUrlHandler {
 
 func (h *ShortUrlHandler) RegisterRoutes(r *gin.RouterGroup) {
 	r.POST("/shorten", h.Minimize)
-	r.GET("/:id", h.Redirect)
+	r.GET("/:code", h.Revert)
 }
 func (s *ShortUrlHandler) Minimize(c *gin.Context) {
 
 	var req model.MinimizeUrlRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	resp, err := s.service.Minimize(c.Request.Context(), req)
 	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(200, resp)
+	c.JSON(http.StatusOK, resp)
 }
 
-func (s *ShortUrlHandler) Redirect(c *gin.Context) {
+func (s *ShortUrlHandler) Revert(c *gin.Context) {
+	code := c.Param("code")
 
+	resp, err := s.service.Revert(c.Request.Context(), model.RedirectUrlRequest{Code: code})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
 }

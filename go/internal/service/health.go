@@ -1,23 +1,22 @@
 package service
 
+import "database/sql"
+
 type IHealthService interface {
-	Liveness() bool
-	Readiness() bool
+	CheckReadiness() error
 }
 
 type healthHandler struct {
+	db *sql.DB
 }
 
-func NewHealthService() IHealthService {
-	return &healthHandler{}
-}
-
-// Liveness implements IHealthService.
-func (h *healthHandler) Liveness() bool {
-	panic("unimplemented")
+func NewHealthService(db *sql.DB) IHealthService {
+	return &healthHandler{
+		db: db,
+	}
 }
 
 // Readiness implements IHealthService.
-func (h *healthHandler) Readiness() bool {
-	panic("unimplemented")
+func (h *healthHandler) CheckReadiness() error {
+	return h.db.Ping()
 }

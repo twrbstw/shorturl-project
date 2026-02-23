@@ -3,11 +3,12 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"shorturl-service/internal/model"
 )
 
 type IShortUrlRepository interface {
 	Save(ctx context.Context, code, longURL string) error
-	FindByCode(ctx context.Context, code string) (string, error)
+	FindByCode(ctx context.Context, code string) (*model.ShortUrlData, error)
 }
 
 type shortUrlRepository struct {
@@ -27,14 +28,19 @@ func (r *shortUrlRepository) Save(ctx context.Context, code, longURL string) err
 	return err
 }
 
-func (r *shortUrlRepository) FindByCode(ctx context.Context, code string) (string, error) {
+func (r *shortUrlRepository) FindByCode(ctx context.Context, code string) (*model.ShortUrlData, error) {
 	query := `
-		SELECT long_url
+		SELECT id, code, long_url, created_at, expired_at
 		FROM short_urls
 		WHERE code = $1
 	`
 
-	var longURL string
-	err := r.db.QueryRowContext(ctx, query, code).Scan(&longURL)
-	return longURL, err
+	var data model.ShortUrlData
+	err := r.db.QueryRowContext(ctx, query, code).Scan(
+		&data.ID,
+		&data.Code,
+		&data.LongURL,
+		&data.CreatedAt,
+		&data.ExpiredAt)
+	return &data, err
 }

@@ -6,13 +6,14 @@ import (
 	"shorturl-service/internal/model"
 	"shorturl-service/internal/repository"
 	"shorturl-service/utils"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type IShortUrlService interface {
 	Minimize(ctx context.Context, req model.MinimizeUrlRequest) (*model.MinimizeUrlResponse, error)
-	Redirect() string
+	Revert(ctx context.Context, req model.RedirectUrlRequest) (*model.RedirectUrlResponse, error)
 }
 
 type shortUrlService struct {
@@ -26,7 +27,7 @@ func NewShortUrlService(repo repository.IShortUrlRepository) IShortUrlService {
 // Minimize implements IShortUrlService.
 func (s *shortUrlService) Minimize(ctx context.Context, req model.MinimizeUrlRequest) (*model.MinimizeUrlResponse, error) {
 	maxAttempts := 3
-	for i := 0; i < maxAttempts; i++ {
+	for range maxAttempts {
 
 		code, err := utils.GenerateCode(6)
 		if err != nil {
@@ -49,6 +50,14 @@ func (s *shortUrlService) Minimize(ctx context.Context, req model.MinimizeUrlReq
 }
 
 // Redirect implements IShortUrlService.
-func (s *shortUrlService) Redirect() string {
-	panic("unimplemented")
+func (s *shortUrlService) Revert(ctx context.Context, req model.RedirectUrlRequest) (*model.RedirectUrlResponse, error) {
+	data, err := s.repo.FindByCode(ctx, req.Code)
+	if err != nil {
+		return nil, err
+	}
+
+	if time.Now().After(data.ExpiredAt) {
+		return nil, errors.New("URL_EXPIRED")
+	}
+	return &model.RedirectUrlResponse{OriginalUrl: data.LongURL}, nil
 }
