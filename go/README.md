@@ -1,13 +1,17 @@
 # 7sol-be-challenge
 
-This is a Go-based backend application built based on MVC Architecture concept. It includes shorten url management and service health check.
+A Go-based backend service built using the MVC architectural pattern.
+The application provides URL shortening functionality along with service health checks.
 
 ---
 
 ## Features
-- ✅ Shorten URL management
-    - Minimizing
-    - Reverting
+- ✅ URL Shortening
+    - Generate a short code from an original URL
+    - Revert a short code back to the original URL
+- ✅ Health Monitoring
+    - Liveness check
+    - Readiness check
 ---
 
 ## Running Locally without Docker
@@ -34,7 +38,7 @@ docker-compose up --build
 ```
 This will start:
 - api (Go backend)
-- postgres (Postgres database)
+- postgres (PostgreSQL database)
 
 By default, the API runs on http://localhost:8080
 
