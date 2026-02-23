@@ -1,5 +1,7 @@
 package worker
 
+import "context"
+
 type Worker interface {
-	Process()
+	Process(ctx context.Context)
 }

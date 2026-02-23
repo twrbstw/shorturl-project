@@ -1,7 +1,7 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"shorturl-service/internal/config"
 	"shorturl-service/internal/handler"
 	"shorturl-service/internal/repository"
@@ -41,20 +41,20 @@ func main() {
 
 	router.RegisterRoutes(&r.RouterGroup, handler)
 
-	startWorkers(db)
+	startWorkers(repo)
 
 	// Start server on port 8080 (default)
 	// Server will listen on 0.0.0.0:8080 (localhost:8080 on Windows)
 	r.Run()
 }
 
-func startWorkers(db *sql.DB) {
+func startWorkers(repo repository.IShortUrlRepository) {
 
 	workers := []worker.Worker{
-		worker.NewExpiredUrlCleaner(db),
+		worker.NewExpiredUrlCleaner(repo),
 	}
 
 	for _, w := range workers {
-		go w.Process()
+		go w.Process(context.Background())
 	}
 }

@@ -9,6 +9,7 @@ import (
 type IShortUrlRepository interface {
 	Save(ctx context.Context, code, longURL string) error
 	FindByCode(ctx context.Context, code string) (*model.ShortUrlData, error)
+	DeleteExpired(ctx context.Context) error
 }
 
 type shortUrlRepository struct {
@@ -43,4 +44,20 @@ func (r *shortUrlRepository) FindByCode(ctx context.Context, code string) (*mode
 		&data.CreatedAt,
 		&data.ExpiredAt)
 	return &data, err
+}
+
+func (r *shortUrlRepository) DeleteExpired(ctx context.Context) error {
+	query := `
+		DELETE FROM short_urls
+		WHERE id IN (
+			SELECT id
+			FROM short_urls
+			WHERE expired_at IS NOT NULL
+			  AND expired_at <= NOW()
+			LIMIT 100
+		);
+	`
+
+	_, err := r.db.ExecContext(ctx, query)
+	return err
 }

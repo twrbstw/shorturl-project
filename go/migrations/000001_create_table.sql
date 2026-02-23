@@ -7,3 +7,5 @@ CREATE TABLE short_urls (
 );
 
 CREATE INDEX idx_short_urls_code ON short_urls(code);
+CREATE INDEX idx_short_urls_expired_partial ON short_urls (expires_at) WHERE expires_at IS NOT NULL;
+
